@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardElevation="10dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/field_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Поле_1"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/field_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Поле_2"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/field_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Поле_3"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/field_4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Поле_4"
+            android:textSize="20sp" />
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:srcCompat="@tools:sample/avatars"
+            android:contentDescription="Картинка" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
