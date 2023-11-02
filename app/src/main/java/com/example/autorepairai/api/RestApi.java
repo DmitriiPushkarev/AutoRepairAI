@@ -6,6 +6,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 
 import org.json.JSONException;
@@ -29,6 +30,7 @@ public class RestApi {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
         final JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST,
                 testUrl, parameters, new Response.Listener<JSONObject>() {
             @Override
