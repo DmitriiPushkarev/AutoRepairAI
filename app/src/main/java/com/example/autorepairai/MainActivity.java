@@ -36,6 +36,7 @@ import androidx.camera.core.ImageProxy;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -48,6 +49,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
@@ -115,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onSendPictureClick(View view){
+        notificationsViewModel = new ViewModelProvider(this).get(NotificationsViewModel.class);
         new Thread(new Runnable() {
             @Override
             @WorkerThread
@@ -130,6 +133,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onGetReportClick(View view){
+        //Айди всеравно остается в модели, была теория, что при переключении меню объект обнуляется
+        notificationsViewModel = new ViewModelProvider(this).get(NotificationsViewModel.class);
         new Thread(new Runnable() {
             @Override
             @WorkerThread
