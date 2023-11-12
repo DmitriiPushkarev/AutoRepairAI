@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">AutoRepairAI</string>
-    <string name="title_home">Заглушка</string>
-    <string name="title_dashboard">Заглушка</string>
-    <string name="title_notifications">Заглушка</string>
+    <string name="title_home">Профиль</string>
+    <string name="title_dashboard">AutoAI</string>
+    <string name="title_notifications">История</string>
 </resources>
