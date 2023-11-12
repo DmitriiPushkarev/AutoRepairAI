@@ -5,51 +5,53 @@ import android.graphics.drawable.BitmapDrawable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.example.autorepairai.MainActivity;
-import com.example.autorepairai.R;
+
+import com.example.autorepairai.ui.notifications.NotificationsViewModel;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Base64;
 
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 public class RestApi {
+    public static final MediaType JSON = MediaType.get("application/json");
     private static final String createAppIdUrl = "http://10.0.2.2:8001/api/v1/public/detection/application/create";
     private static final String uploadFileUrl = "http://10.0.2.2:8001/api/v1/public/detection/%s/file";
     private static final String sendFileUrl = "http://10.0.2.2:8001/api/v1/public/detection/%s/send";
     private static final String getResultUrl = "http://10.0.2.2:8001/api/v1/public/detection/%s/result";
 
-    public static void createAppId(RequestQueue mRequestQueue, ImageView imageViewForDownload, TextView tv1) {
-        final JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST,
-                createAppIdUrl, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                try {
-                    String id = response.getString("applicationId");
-                    uploadFile(mRequestQueue, id, imageViewForDownload);
-                    sendFile(mRequestQueue, id);
-                    getResult(mRequestQueue, id, tv1);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                error.printStackTrace();
-            }
-        });
+    public static String createAppId() {
+        OkHttpClient client = new OkHttpClient();
 
-        mRequestQueue.add(request);
+        Request request = new Request.Builder()
+                .url(createAppIdUrl)
+                .post(RequestBody.create("", JSON))
+                .build();
+        String id = "";
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Запрос к серверу не был успешен: " +
+                        response.code() + " " + response.message());
+            }
+            String responseBody = response.body().string();
+            int index = responseBody.indexOf(":") + 1;
+            id = responseBody.substring(index, responseBody.length() - 1);
+        } catch (IOException e) {
+            System.out.println("Ошибка подключения: " + e);
+        }
+
+        return id;
     }
 
-    public static void uploadFile(RequestQueue mRequestQueue, String id, ImageView imageViewForDownload) {
+    public static void uploadFile(String id, ImageView imageViewForDownload) {
         JSONObject parameters = new JSONObject();
         BitmapDrawable bitmapDrawable = ((BitmapDrawable) imageViewForDownload.getDrawable());
         Bitmap bitmap = bitmapDrawable.getBitmap();
@@ -63,53 +65,54 @@ public class RestApi {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        final JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST,
-                String.format(uploadFileUrl,id), parameters, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
 
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                error.printStackTrace();
-            }
-        });
+        OkHttpClient client = new OkHttpClient();
 
-        mRequestQueue.add(request);
+        Request request = new Request.Builder()
+                .url(String.format(uploadFileUrl,id))
+                .post(RequestBody.create(String.valueOf(parameters), JSON))
+                .build();
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Запрос к серверу не был успешен: " +
+                        response.code() + " " + response.message());
+            }
+        } catch (IOException e) {
+            System.out.println("Ошибка подключения: " + e);
+        }
     }
 
-    public static void sendFile(RequestQueue mRequestQueue, String id) {
-        final JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST,
-                String.format(sendFileUrl,id), null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
+    public static void sendFile(String id) {
+        OkHttpClient client = new OkHttpClient();
 
+        Request request = new Request.Builder()
+                .url(String.format(sendFileUrl,id))
+                .post(RequestBody.create("", JSON))
+                .build();
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Запрос к серверу не был успешен: " +
+                        response.code() + " " + response.message());
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                error.printStackTrace();
-            }
-        });
-
-        mRequestQueue.add(request);
+        } catch (IOException e) {
+            System.out.println("Ошибка подключения: " + e);
+        }
     }
 
-    public static void getResult(RequestQueue mRequestQueue, String id, TextView tv1) {
-        final JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET,
-                String.format(getResultUrl, id), null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                tv1.setText(response.toString());
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                error.printStackTrace();
-            }
-        });
+    public static void getResult(String id, TextView tv1) {
+        OkHttpClient client = new OkHttpClient();
 
-        mRequestQueue.add(request);
+        Request request = new Request.Builder()
+                .url(String.format(getResultUrl,id))
+                .build();
+        try (Response response = client.newCall(request).execute()) {
+            tv1.setText(response.body().string());
+            if (!response.isSuccessful()) {
+                throw new IOException("Запрос к серверу не был успешен: " +
+                        response.code() + " " + response.message());
+            }
+        } catch (IOException e) {
+            System.out.println("Ошибка подключения: " + e);
+        }
     }
 }

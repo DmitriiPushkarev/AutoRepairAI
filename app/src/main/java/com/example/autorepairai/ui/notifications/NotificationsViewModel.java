@@ -8,6 +8,8 @@ public class NotificationsViewModel extends ViewModel {
 
     private final MutableLiveData<String> mText;
 
+    public String currentId;
+
     public NotificationsViewModel() {
         mText = new MutableLiveData<>();
         mText.setValue("");
@@ -15,5 +17,13 @@ public class NotificationsViewModel extends ViewModel {
 
     public LiveData<String> getText() {
         return mText;
+    }
+
+    public String getCurrentId() {
+        return currentId;
+    }
+
+    public void setCurrentId(String currentId) {
+        this.currentId = currentId;
     }
 }

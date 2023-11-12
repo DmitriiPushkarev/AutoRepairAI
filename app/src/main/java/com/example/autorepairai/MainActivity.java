@@ -19,6 +19,7 @@ import android.widget.Toast;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 import com.example.autorepairai.api.RestApi;
+import com.example.autorepairai.ui.notifications.NotificationsViewModel;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.activity.result.ActivityResult;
@@ -26,6 +27,8 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.UiThread;
+import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
@@ -55,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ImageView preview;
     private ImageView imageViewForDownload;
+
+    private NotificationsViewModel notificationsViewModel;
 
     ActivityResultLauncher<Intent> resultLauncher;
 
@@ -109,6 +114,33 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void onSendPictureClick(View view){
+        new Thread(new Runnable() {
+            @Override
+            @WorkerThread
+            public void run() {
+                TextView tv1 = (TextView) findViewById (R.id.textView);
+                ImageView imageViewForDownload = findViewById (R.id.pictureFromFiles);
+                String id = RestApi.createAppId();
+                RestApi.uploadFile(id, imageViewForDownload);
+                RestApi.sendFile(id);
+                notificationsViewModel.setCurrentId(id);
+            }
+        }).start();
+    }
+
+    public void onGetReportClick(View view){
+        new Thread(new Runnable() {
+            @Override
+            @WorkerThread
+            public void run() {
+                TextView tv1 = (TextView) findViewById (R.id.textView);
+                String id = notificationsViewModel.getCurrentId();
+                RestApi.getResult(id, tv1);
+            }
+        }).start();
+    }
+
     private void registerResult(){
         resultLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -118,8 +150,6 @@ public class MainActivity extends AppCompatActivity {
                         try{
                             Uri imageUri = result.getData().getData();
                             imageViewForDownload.setImageURI(imageUri);
-                            TextView tv1 = (TextView) findViewById (R.id.textView);
-                            RestApi.createAppId(mRequestQueue, imageViewForDownload, tv1);
                         } catch (Exception e) {
                             e.printStackTrace();
                             Toast.makeText(MainActivity.this, "Не выбрано", Toast.LENGTH_SHORT).show();
