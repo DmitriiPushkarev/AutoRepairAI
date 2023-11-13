@@ -20,6 +20,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 import com.example.autorepairai.api.RestApi;
 import com.example.autorepairai.ui.notifications.NotificationsViewModel;
+import com.github.dhaval2404.imagepicker.ImagePicker;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.activity.result.ActivityResult;
@@ -27,6 +28,7 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
@@ -105,25 +107,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onSavePictureClick(View view) {
-        Bitmap bitmap = ((BitmapDrawable)preview.getDrawable()).getBitmap();
+        Bitmap bitmap = ((BitmapDrawable) preview.getDrawable()).getBitmap();
         saveReceivedImage(bitmap, "some_name");
     }
 
     public void onDownloadPictureClick(View view) {
-        imageViewForDownload = findViewById(R.id.pictureFromFiles);
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        resultLauncher.launch(intent);
+        ImagePicker.with(MainActivity.this)
+                .crop()                    //Crop image(Optional), Check Customization for more option
+                .compress(1024)            //Final image size will be less than 1 MB(Optional)
+                .maxResultSize(1080, 1080)    //Final image resolution will be less than 1080 x 1080(Optional)
+                .start();
 
     }
 
-    public void onSendPictureClick(View view){
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Uri uri = data.getData();
+        imageViewForDownload = findViewById(R.id.pictureFromFiles);
+        imageViewForDownload.setImageURI(uri);
+    }
+
+    public void onSendPictureClick(View view) {
         notificationsViewModel = new ViewModelProvider(this).get(NotificationsViewModel.class);
         new Thread(new Runnable() {
             @Override
             @WorkerThread
             public void run() {
-                TextView tv1 = (TextView) findViewById (R.id.textView);
-                ImageView imageViewForDownload = findViewById (R.id.pictureFromFiles);
+                TextView tv1 = (TextView) findViewById(R.id.textView);
+                ImageView imageViewForDownload = findViewById(R.id.pictureFromFiles);
                 String id = RestApi.createAppId();
                 RestApi.uploadFile(id, imageViewForDownload);
                 RestApi.sendFile(id);
@@ -132,27 +144,27 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    public void onGetReportClick(View view){
+    public void onGetReportClick(View view) {
         //Айди всеравно остается в модели, была теория, что при переключении меню объект обнуляется
         notificationsViewModel = new ViewModelProvider(this).get(NotificationsViewModel.class);
         new Thread(new Runnable() {
             @Override
             @WorkerThread
             public void run() {
-                TextView tv1 = (TextView) findViewById (R.id.textView);
+                TextView tv1 = (TextView) findViewById(R.id.textView);
                 String id = notificationsViewModel.getCurrentId();
                 RestApi.getResult(id, tv1);
             }
         }).start();
     }
 
-    private void registerResult(){
+    private void registerResult() {
         resultLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 new ActivityResultCallback<ActivityResult>() {
                     @Override
-                    public void onActivityResult(ActivityResult result){
-                        try{
+                    public void onActivityResult(ActivityResult result) {
+                        try {
                             Uri imageUri = result.getData().getData();
                             imageViewForDownload.setImageURI(imageUri);
                         } catch (Exception e) {
@@ -164,12 +176,12 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    private void saveReceivedImage(Bitmap image, String imageName){
+    private void saveReceivedImage(Bitmap image, String imageName) {
         try {
             //TODO ПОДУМАТЬ КУДА СОХРАНЯТЬ
             File path = new File(this.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "MyAppName" + File.separator + "Images");
             Toast.makeText(this, path.toString(), Toast.LENGTH_SHORT).show();
-            if(!path.exists()){
+            if (!path.exists()) {
                 path.mkdirs();
             }
             File outFile = new File(path, imageName + ".jpeg");

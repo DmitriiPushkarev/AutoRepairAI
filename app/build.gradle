@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.example.autorepairai'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.example.autorepairai"
         minSdk 28
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -32,6 +32,7 @@ android {
 }
 
 dependencies {
+    implementation 'com.github.dhaval2404:imagepicker:2.1'
     implementation 'androidx.core:core:1.2.0'
     implementation 'com.squareup.okhttp3:okhttp:4.10.0'
     implementation 'com.android.volley:volley:1.2.1'
