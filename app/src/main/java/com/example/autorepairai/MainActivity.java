@@ -9,9 +9,10 @@ import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.util.Size;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,6 +20,7 @@ import android.widget.Toast;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 import com.example.autorepairai.api.RestApi;
+import com.example.autorepairai.ui.dashboard.DashboardViewModel;
 import com.example.autorepairai.ui.notifications.NotificationsViewModel;
 import com.github.dhaval2404.imagepicker.ImagePicker;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -29,7 +31,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.UiThread;
 import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
@@ -51,7 +52,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView preview;
     private ImageView imageViewForDownload;
 
-    private NotificationsViewModel notificationsViewModel;
+    private DashboardViewModel dashboardViewModel;
 
     ActivityResultLauncher<Intent> resultLauncher;
 
@@ -94,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
         registerResult();
     }
 
+    //Кнопка камера
     public void onGetCameraClick(View view) {
         preview = findViewById(R.id.preview);
 
@@ -106,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //Кнопка снимок
     public void onSavePictureClick(View view) {
         Bitmap bitmap = ((BitmapDrawable) preview.getDrawable()).getBitmap();
         saveReceivedImage(bitmap, "some_name");
@@ -117,42 +119,58 @@ public class MainActivity extends AppCompatActivity {
                 .compress(1024)            //Final image size will be less than 1 MB(Optional)
                 .maxResultSize(1080, 1080)    //Final image resolution will be less than 1080 x 1080(Optional)
                 .start();
-
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Uri uri = data.getData();
-        imageViewForDownload = findViewById(R.id.pictureFromFiles);
+        imageViewForDownload = findViewById(R.id.preview);
         imageViewForDownload.setImageURI(uri);
+
+        Button buttonForSend = findViewById(R.id.buttonForSend);
+        buttonForSend.setVisibility(View.VISIBLE);
+        Button buttonForReport = findViewById(R.id.buttonForReport);
+        buttonForReport.setVisibility(View.VISIBLE);
+        TextView text = findViewById(R.id.textView6);
+        text.setVisibility(View.VISIBLE);
+
+        TextView text2 = findViewById(R.id.textView5);
+        text2.setText("Получение отчета");
+        TextView text3 = findViewById(R.id.textView7);
+        text3.setVisibility(View.VISIBLE);
+
+        TextView tv1 = findViewById(R.id.textView3);
+        tv1.setText("Шаг 2 - получение отчета");
     }
 
     public void onSendPictureClick(View view) {
-        notificationsViewModel = new ViewModelProvider(this).get(NotificationsViewModel.class);
+        dashboardViewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
+        TextView text = findViewById(R.id.textView6);
+        text.setVisibility(View.VISIBLE);
+        text.setText("Заглушка: фотография отправлена");
         new Thread(new Runnable() {
             @Override
             @WorkerThread
             public void run() {
-                TextView tv1 = (TextView) findViewById(R.id.textView);
-                ImageView imageViewForDownload = findViewById(R.id.pictureFromFiles);
+                ImageView imageViewForDownload = findViewById(R.id.preview);
                 String id = RestApi.createAppId();
                 RestApi.uploadFile(id, imageViewForDownload);
                 RestApi.sendFile(id);
-                notificationsViewModel.setCurrentId(id);
+                dashboardViewModel.setCurrentId(id);
             }
         }).start();
     }
 
     public void onGetReportClick(View view) {
         //Айди всеравно остается в модели, была теория, что при переключении меню объект обнуляется
-        notificationsViewModel = new ViewModelProvider(this).get(NotificationsViewModel.class);
+        dashboardViewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
         new Thread(new Runnable() {
             @Override
             @WorkerThread
             public void run() {
-                TextView tv1 = (TextView) findViewById(R.id.textView);
-                String id = notificationsViewModel.getCurrentId();
+                TextView tv1 = (TextView) findViewById(R.id.textView6);
+                String id = dashboardViewModel.getCurrentId();
                 RestApi.getResult(id, tv1);
             }
         }).start();
