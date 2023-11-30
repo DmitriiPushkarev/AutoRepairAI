@@ -2,11 +2,14 @@ package com.example.autorepairai.api;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.view.View;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 
-import com.example.autorepairai.ui.notifications.NotificationsViewModel;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,31 +17,39 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.Authenticator;
+import okhttp3.Credentials;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.Route;
 
 public class RestApi {
     public static final MediaType JSON = MediaType.get("application/json");
-    private static final String createAppIdUrl = "http://10.0.2.2:8001/api/v1/public/detection/application/create";
-    private static final String uploadFileUrl = "http://10.0.2.2:8001/api/v1/public/detection/%s/file";
-    private static final String sendFileUrl = "http://10.0.2.2:8001/api/v1/public/detection/%s/send";
-    private static final String getResultUrl = "http://10.0.2.2:8001/api/v1/public/detection/%s/result";
+    private static final String domain = "https://test.npp-arts.ru/api/v1/public/";
+    private static final String createAppIdUrl = domain + "detection/application/create";
+    private static final String uploadFileUrl = domain + "detection/%s/file";
+    private static final String sendFileUrl = domain + "detection/%s/send";
+    private static final String getStatusUrl = domain + "detection/%s/status";
+    private static final String auth = domain + "account/auth";
+    private static final String reg = domain + "account/register";
 
-    public static String createAppId() {
+    public static String createAppId(String apiKey) {
         OkHttpClient client = new OkHttpClient();
 
         Request request = new Request.Builder()
                 .url(createAppIdUrl)
                 .post(RequestBody.create("", JSON))
+                .addHeader("X-API-Key", apiKey)
                 .build();
         String id = "";
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Запрос к серверу не был успешен: " +
+                throw new IOException("Запрос к серверу не был успешен: " + response.body().string() + " " +
                         response.code() + " " + response.message());
             }
             String responseBody = response.body().string();
@@ -51,7 +62,7 @@ public class RestApi {
         return id;
     }
 
-    public static void uploadFile(String id, ImageView imageViewForDownload) {
+    public static void uploadFile(String id, ImageView imageViewForDownload, String apiKey) {
         JSONObject parameters = new JSONObject();
         BitmapDrawable bitmapDrawable = ((BitmapDrawable) imageViewForDownload.getDrawable());
         Bitmap bitmap = bitmapDrawable.getBitmap();
@@ -71,10 +82,11 @@ public class RestApi {
         Request request = new Request.Builder()
                 .url(String.format(uploadFileUrl,id))
                 .post(RequestBody.create(String.valueOf(parameters), JSON))
+                .addHeader("X-API-Key", apiKey)
                 .build();
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Запрос к серверу не был успешен: " +
+                throw new IOException("Запрос к серверу не был успешен: " + response.body().string() + " " +
                         response.code() + " " + response.message());
             }
         } catch (IOException e) {
@@ -82,16 +94,17 @@ public class RestApi {
         }
     }
 
-    public static void sendFile(String id) {
+    public static void sendFile(String id, String apiKey) {
         OkHttpClient client = new OkHttpClient();
 
         Request request = new Request.Builder()
                 .url(String.format(sendFileUrl,id))
+                .addHeader("X-API-Key", apiKey)
                 .post(RequestBody.create("", JSON))
                 .build();
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Запрос к серверу не был успешен: " +
+                throw new IOException("Запрос к серверу не был успешен: " + response.body().string() + " " +
                         response.code() + " " + response.message());
             }
         } catch (IOException e) {
@@ -99,20 +112,87 @@ public class RestApi {
         }
     }
 
-    public static void getResult(String id, TextView tv1) {
+    public static String getStatus(String id, String apiKey) {
         OkHttpClient client = new OkHttpClient();
 
         Request request = new Request.Builder()
-                .url(String.format(getResultUrl,id))
+                .url(String.format(getStatusUrl,id))
+                .addHeader("X-API-Key", apiKey)
                 .build();
+        String responseStr = null;
         try (Response response = client.newCall(request).execute()) {
-            tv1.setText(response.body().string());
+            if (!response.isSuccessful()) {
+                throw new IOException("Запрос к серверу не был успешен: " + response.body().string() + " " +
+                        response.code() + " " + response.message());
+            }
+            responseStr = response.body().string();
+        } catch (IOException e) {
+            System.out.println("Ошибка подключения: " + e);
+        }
+
+        return responseStr;
+    }
+
+    public static String registration(String login, String password, View view) {
+        OkHttpClient client = new OkHttpClient();
+
+        JSONObject parameters = new JSONObject();
+
+        try {
+            parameters.put("login", login);
+            parameters.put("password", password);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        Request request = new Request.Builder()
+                .url(reg)
+                .post(RequestBody.create(String.valueOf(parameters), JSON))
+                .build();
+        String responseStr = null;
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                JSONObject Jobject = new JSONObject(response.body().string());
+                Snackbar.make(view, Jobject.get("detail").toString().replace("System message: ",""), Snackbar.LENGTH_SHORT).show();
+                throw new IOException("Запрос к серверу не был успешен: " +
+                        response.code() + " " + response.message());
+            }
+            responseStr = response.body().string();
+
+        } catch (IOException | JSONException e) {
+            System.out.println("Ошибка подключения: " + e);
+        }
+        return responseStr;
+    }
+
+    public static String authorization(String login, String password) {
+        OkHttpClient client = new OkHttpClient();
+
+        JSONObject parameters = new JSONObject();
+
+        try {
+            parameters.put("login", login);
+            parameters.put("password", password);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        Request request = new Request.Builder()
+                .url(auth)
+                .post(RequestBody.create(String.valueOf(parameters), JSON))
+                .build();
+        String responseStr = null;
+        try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new IOException("Запрос к серверу не был успешен: " +
                         response.code() + " " + response.message());
             }
+            responseStr = response.body().string();
         } catch (IOException e) {
             System.out.println("Ошибка подключения: " + e);
         }
+
+        return responseStr;
     }
 }

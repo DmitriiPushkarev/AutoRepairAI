@@ -7,20 +7,6 @@
     android:layout_height="match_parent"
     tools:context=".ui.notifications.NotificationsFragment" >
 
-    <Button
-        android:id="@+id/downloadPicture"
-        android:layout_width="160dp"
-        android:layout_height="39dp"
-        android:layout_marginTop="40dp"
-        android:onClick="onDownloadPictureClick"
-        android:text="Выбрать фото"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.111"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pictureFromFiles"
-        app:layout_constraintVertical_bias="0.0" />
-
     <TextView
         android:id="@+id/text_notifications"
         android:layout_width="match_parent"
@@ -34,56 +20,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
-
-    <ImageView
-        android:id="@+id/pictureFromFiles"
-        android:layout_width="326dp"
-        android:layout_height="281dp"
-        android:scaleType="centerCrop"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.494"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.166" />
-
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="356dp"
-        android:layout_height="170dp"
-        android:layout_marginTop="51dp"
-        android:text="TextView"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/downloadPicture" />
-
-    <Button
-        android:id="@+id/sendButton"
-        android:layout_width="137dp"
-        android:layout_height="43dp"
-        android:layout_marginTop="40dp"
-        android:layout_marginBottom="292dp"
-        android:onClick="onSendPictureClick"
-        android:text="Отправить"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/downloadPicture"
-        app:layout_constraintTop_toBottomOf="@+id/pictureFromFiles"
-        app:layout_constraintVertical_bias="0.0" />
-
-    <Button
-        android:id="@+id/getReport"
-        android:layout_width="179dp"
-        android:layout_height="43dp"
-        android:layout_marginTop="99dp"
-        android:layout_marginBottom="26dp"
-        android:onClick="onGetReportClick"
-        android:text="Получить отчет"
-        app:layout_constraintBottom_toTopOf="@+id/textView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pictureFromFiles"
-        app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

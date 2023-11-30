@@ -1,44 +1,28 @@
 package com.example.autorepairai;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.media.Image;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.util.Size;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 import com.example.autorepairai.api.RestApi;
 import com.example.autorepairai.ui.dashboard.DashboardViewModel;
-import com.example.autorepairai.ui.notifications.NotificationsViewModel;
 import com.github.dhaval2404.imagepicker.ImagePicker;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.core.CameraSelector;
-import androidx.camera.core.ImageAnalysis;
-import androidx.camera.core.ImageProxy;
-import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -46,71 +30,141 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.autorepairai.databinding.ActivityMainBinding;
-import com.google.common.util.concurrent.ListenableFuture;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
 
-    private static final int PERMISSION_REQUEST_CAMERA = 1;
-
-    private ImageView preview;
     private ImageView imageViewForDownload;
 
     private DashboardViewModel dashboardViewModel;
 
     ActivityResultLauncher<Intent> resultLauncher;
 
-    ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
-
-    YUVtoRGB translator = new YUVtoRGB();
-
     RequestQueue mRequestQueue;
+
+    static final String SAVE_EMAIL = "save_email";
+
+    static final String SAVE_PASSWORD = "save_password";
+
+    //static final String SAVE_FIRST_NAME = "save_first_name";
+
+    //static final String SAVE_SECOND_NAME = "save_second_name";
+
+    static final String SAVE_USERID = "save_userid";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         mRequestQueue = Volley.newRequestQueue(this);
-
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
         BottomNavigationView navView = findViewById(R.id.nav_view);
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navView, navController);
-        registerResult();
-    }
-
-    //Кнопка камера
-    public void onGetCameraClick(View view) {
-        preview = findViewById(R.id.preview);
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},
-                    PERMISSION_REQUEST_CAMERA);
-        } else {
-            initializeCamera();
+        deleteUserData();
+        if (isNewUser()){
+            setContentView(R.layout.fragment_enter);
         }
     }
 
-    //Кнопка снимок
-    public void onSavePictureClick(View view) {
-        Bitmap bitmap = ((BitmapDrawable) preview.getDrawable()).getBitmap();
-        saveReceivedImage(bitmap, "some_name");
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Uri uri = data.getData();
+        imageViewForDownload = findViewById(R.id.pickImage);
+        imageViewForDownload.setImageURI(uri);
+
+        Button buttonForSend = findViewById(R.id.buttonForSend);
+        buttonForSend.setVisibility(View.VISIBLE);
+    }
+
+    public void onSendPictureClick(View view) {
+        dashboardViewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
+        TextView notification = findViewById(R.id.notification);
+        notification.setText(" Внимание, фото обрабатывается, это займет \n несколько секунд");
+        ProgressBar progressBar = findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.VISIBLE);
+        ImageView imageViewForDownload = findViewById(R.id.pickImage);
+        imageViewForDownload.setColorFilter(Color.rgb(123, 123, 123), android.graphics.PorterDuff.Mode.MULTIPLY);
+        imageViewForDownload.setClickable(false);
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            @WorkerThread
+            public void run() {
+                ImageView imageViewForDownload = findViewById(R.id.pickImage);
+                //String apiKey = getSharedPreferences("setting",MODE_PRIVATE).getString(SAVE_USERID, "");
+                String apiKey = "210ffaa5b1ce4425302594cc9f7283c2cf930af7";
+                String id = RestApi.createAppId(apiKey);
+                RestApi.uploadFile(id, imageViewForDownload,apiKey);
+                RestApi.sendFile(id,apiKey);
+                dashboardViewModel.setCurrentId(id);
+                String responseString = "1";
+
+                int i = 0;
+                while (responseString.contains("1") && i != 20){
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    responseString = RestApi.getStatus(id,apiKey);
+                    System.out.println("Response status: "+responseString);
+                    i++;
+                }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        setContentView(R.layout.fragment_step2);
+                    }
+                });
+            }
+        });
+        thread.start();
+    }
+
+    public void onGetReportClick(View view) {
+        //Айди всеравно остается в модели, была теория, что при переключении меню объект обнуляется
+        dashboardViewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
+        new Thread(new Runnable() {
+            @Override
+            @WorkerThread
+            public void run() {
+//                TextView tv1 = (TextView) findViewById(R.id.textView6);
+//                String id = dashboardViewModel.getCurrentId();
+//                RestApi.getResult(id, tv1);
+            }
+        }).start();
+    }
+
+    public void showRegistrationForm(View view){
+        setContentView(R.layout.fragment_registration);
+    }
+
+    public void showSecondStep(View view){
+        setContentView(R.layout.fragment_step2);
+    }
+
+    public void showThirdStep(View view){
+        setContentView(R.layout.fragment_step3);
+    }
+
+    public void showFourthStep(View view){
+        setContentView(R.layout.fragment_step4);
+    }
+
+    public void closeFragment(View view){
+        setContentView(binding.getRoot());
+        ProgressBar progressBar = findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.INVISIBLE);
+        imageViewForDownload.clearColorFilter();
+        imageViewForDownload.setClickable(true);
     }
 
     public void onDownloadPictureClick(View view) {
@@ -121,146 +175,104 @@ public class MainActivity extends AppCompatActivity {
                 .start();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        Uri uri = data.getData();
-        imageViewForDownload = findViewById(R.id.preview);
-        imageViewForDownload.setImageURI(uri);
+    //Add connection to api
+    public void saveUserData(View view) {
+        SharedPreferences.Editor ed = getSharedPreferences("setting",MODE_PRIVATE).edit();
 
-        Button buttonForSend = findViewById(R.id.buttonForSend);
-        buttonForSend.setVisibility(View.VISIBLE);
-        Button buttonForReport = findViewById(R.id.buttonForReport);
-        buttonForReport.setVisibility(View.VISIBLE);
-        TextView text = findViewById(R.id.textView6);
-        text.setVisibility(View.VISIBLE);
+        EditText tvEmail = (EditText) findViewById(R.id.editTextTextEmailAddressEnter);
+        EditText tvPassword = (EditText) findViewById(R.id.editTextTextPasswordEnter);
+        //EditText tvFirstName = (EditText) findViewById(R.id.editTextTextPersonFirstName);
+        //EditText tvSecondName = (EditText) findViewById(R.id.editTextTextPersonSecondName);
 
-        TextView text2 = findViewById(R.id.textView5);
-        text2.setText("Получение отчета");
-        TextView text3 = findViewById(R.id.textView7);
-        text3.setVisibility(View.VISIBLE);
+        ed.putString(SAVE_EMAIL, tvEmail.getText().toString());
+        ed.putString(SAVE_PASSWORD, tvPassword.getText().toString());
+        //ed.putString(SAVE_FIRST_NAME, tvFirstName.getText().toString());
+        //ed.putString(SAVE_SECOND_NAME, tvSecondName.getText().toString());
+        //ed.putString(SAVE_USERID, UUID.randomUUID().toString());
 
-        TextView tv1 = findViewById(R.id.textView3);
-        tv1.setText("Шаг 2 - получение отчета");
+        ed.apply();
+
+        setContentView(binding.getRoot());
     }
 
-    public void onSendPictureClick(View view) {
-        dashboardViewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
-        TextView text = findViewById(R.id.textView6);
-        text.setVisibility(View.VISIBLE);
-        text.setText("Заглушка: фотография отправлена");
-        new Thread(new Runnable() {
+    public void registration(View view){
+        Thread thread = new Thread(new Runnable() {
             @Override
             @WorkerThread
             public void run() {
-                ImageView imageViewForDownload = findViewById(R.id.preview);
-                String id = RestApi.createAppId();
-                RestApi.uploadFile(id, imageViewForDownload);
-                RestApi.sendFile(id);
-                dashboardViewModel.setCurrentId(id);
-            }
-        }).start();
-    }
+                EditText tvEmail = (EditText) findViewById(R.id.editTextTextEmailAddressReg);
+                EditText tvPassword = (EditText) findViewById(R.id.editTextTextPasswordReg);
+                SharedPreferences.Editor ed = getSharedPreferences("setting",MODE_PRIVATE).edit();
+                ed.putString(SAVE_EMAIL, tvEmail.getText().toString());
+                ed.putString(SAVE_PASSWORD, tvPassword.getText().toString());
 
-    public void onGetReportClick(View view) {
-        //Айди всеравно остается в модели, была теория, что при переключении меню объект обнуляется
-        dashboardViewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
-        new Thread(new Runnable() {
-            @Override
-            @WorkerThread
-            public void run() {
-                TextView tv1 = (TextView) findViewById(R.id.textView6);
-                String id = dashboardViewModel.getCurrentId();
-                RestApi.getResult(id, tv1);
-            }
-        }).start();
-    }
+                String strEmail = tvEmail.getText().toString();
+                String strPassword = tvPassword.getText().toString();
+                String apiKey = RestApi.registration(strEmail, strPassword, view);
+                System.out.println("ApiKey: " + apiKey);
+                ed.putString(SAVE_USERID, apiKey);
 
-    private void registerResult() {
-        resultLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                new ActivityResultCallback<ActivityResult>() {
-                    @Override
-                    public void onActivityResult(ActivityResult result) {
-                        try {
-                            Uri imageUri = result.getData().getData();
-                            imageViewForDownload.setImageURI(imageUri);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            Toast.makeText(MainActivity.this, "Не выбрано", Toast.LENGTH_SHORT).show();
+                ed.apply();
+
+                if(apiKey!=null) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            setContentView(binding.getRoot());
                         }
-                    }
+                    });
                 }
-        );
-    }
-
-    private void saveReceivedImage(Bitmap image, String imageName) {
-        try {
-            //TODO ПОДУМАТЬ КУДА СОХРАНЯТЬ
-            File path = new File(this.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "MyAppName" + File.separator + "Images");
-            Toast.makeText(this, path.toString(), Toast.LENGTH_SHORT).show();
-            if (!path.exists()) {
-                path.mkdirs();
             }
-            File outFile = new File(path, imageName + ".jpeg");
-            FileOutputStream outputStream = new FileOutputStream(outFile);
-            image.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
-            outputStream.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        });
+        thread.start();
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == PERMISSION_REQUEST_CAMERA && grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            initializeCamera();
-        }
-    }
-
-    private void initializeCamera() {
-        cameraProviderFuture = ProcessCameraProvider.getInstance(this);
-        cameraProviderFuture.addListener(new Runnable() {
+    public void authorization(View view){
+        Thread thread = new Thread(new Runnable() {
             @Override
+            @WorkerThread
             public void run() {
-                try {
-                    ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                EditText tvEmail = (EditText) findViewById(R.id.editTextTextEmailAddressEnter);
+                EditText tvPassword = (EditText) findViewById(R.id.editTextTextPasswordEnter);
+                SharedPreferences.Editor ed = getSharedPreferences("setting",MODE_PRIVATE).edit();
+                ed.putString(SAVE_EMAIL, tvEmail.getText().toString());
+                ed.putString(SAVE_PASSWORD, tvPassword.getText().toString());
 
-                    ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                            .setTargetResolution(new Size(1024, 768))
-                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                            .build();
+                String strEmail = tvEmail.getText().toString();
+                String strPassword = tvPassword.getText().toString();
+                String apiKey = RestApi.authorization(strEmail, strPassword);
+                ed.putString(SAVE_USERID, apiKey);
 
-                    CameraSelector cameraSelector = new CameraSelector.Builder()
-                            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-                            .build();
+                ed.apply();
 
-                    imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(MainActivity.this),
-                            new ImageAnalysis.Analyzer() {
-                                @Override
-                                public void analyze(@NonNull ImageProxy image) {
-                                    Image img = image.getImage();
-                                    Bitmap bitmap = translator.translateYUV(img, MainActivity.this);
-
-                                    preview.setRotation(image.getImageInfo().getRotationDegrees());
-                                    preview.setImageBitmap(bitmap);
-                                    image.close();
-                                }
-                            });
-
-                    cameraProvider.bindToLifecycle(MainActivity.this, cameraSelector, imageAnalysis);
-
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        setContentView(binding.getRoot());
+                    }
+                });
             }
-        }, ContextCompat.getMainExecutor(this));
+        });
+        thread.start();
     }
 
+    private boolean isNewUser(){
+        String email = getSharedPreferences("setting",MODE_PRIVATE).getString(SAVE_EMAIL, "");
+        String password = getSharedPreferences("setting",MODE_PRIVATE).getString(SAVE_PASSWORD, "");
+        //String firstName = getSharedPreferences("setting",MODE_PRIVATE).getString(SAVE_FIRST_NAME, "");
+        //String secondName = getSharedPreferences("setting",MODE_PRIVATE).getString(SAVE_SECOND_NAME, "");
+        String uuid = getSharedPreferences("setting",MODE_PRIVATE).getString(SAVE_USERID, "");
+
+        return email.isEmpty() || password.isEmpty() || uuid.isEmpty();
+    }
+
+    private void deleteUserData(){
+        SharedPreferences prefs = getSharedPreferences("setting", MODE_PRIVATE);
+
+        prefs.edit().remove(SAVE_EMAIL).apply();
+        prefs.edit().remove(SAVE_PASSWORD).apply();
+        //prefs.edit().remove(SAVE_FIRST_NAME).apply();
+        //prefs.edit().remove(SAVE_SECOND_NAME).apply();
+        prefs.edit().remove(SAVE_USERID).apply();
+    }
 }
