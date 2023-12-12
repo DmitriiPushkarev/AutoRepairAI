@@ -2,6 +2,7 @@ package com.example.autorepairai.api;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -29,12 +30,17 @@ import okhttp3.Response;
 import okhttp3.Route;
 
 public class RestApi {
+
+    //Логин - dima@mail.ru
+    //Пароль - qwerty123@Q
     public static final MediaType JSON = MediaType.get("application/json");
-    private static final String domain = "https://test.npp-arts.ru/api/v1/public/";
+    //private static final String domain = "https://test.npp-arts.ru/api/v1/public/";
+    private static final String domain = "http://10.0.2.2:8001/api/v1/public/";
     private static final String createAppIdUrl = domain + "detection/application/create";
     private static final String uploadFileUrl = domain + "detection/%s/file";
     private static final String sendFileUrl = domain + "detection/%s/send";
     private static final String getStatusUrl = domain + "detection/%s/status";
+    private static final String getResultUrl = domain + "detection/%s/result";
     private static final String auth = domain + "account/auth";
     private static final String reg = domain + "account/register";
 
@@ -49,7 +55,7 @@ public class RestApi {
         String id = "";
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Запрос к серверу не был успешен: " + response.body().string() + " " +
+                throw new IOException("Запрос к серверу не был успешен: " + createAppIdUrl + " " + response.body().string() + " " +
                         response.code() + " " + response.message());
             }
             String responseBody = response.body().string();
@@ -86,7 +92,7 @@ public class RestApi {
                 .build();
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Запрос к серверу не был успешен: " + response.body().string() + " " +
+                throw new IOException("Запрос к серверу не был успешен: " + String.format(uploadFileUrl,id) + " " + response.body().string() + " " +
                         response.code() + " " + response.message());
             }
         } catch (IOException e) {
@@ -104,7 +110,7 @@ public class RestApi {
                 .build();
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Запрос к серверу не был успешен: " + response.body().string() + " " +
+                throw new IOException("Запрос к серверу не был успешен: " + String.format(sendFileUrl,id) + " "+ response.body().string() + " " +
                         response.code() + " " + response.message());
             }
         } catch (IOException e) {
@@ -122,7 +128,7 @@ public class RestApi {
         String responseStr = null;
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Запрос к серверу не был успешен: " + response.body().string() + " " +
+                throw new IOException("Запрос к серверу не был успешен: " + String.format(getStatusUrl,id) + " " + response.body().string() + " " +
                         response.code() + " " + response.message());
             }
             responseStr = response.body().string();
@@ -166,7 +172,7 @@ public class RestApi {
         return responseStr;
     }
 
-    public static String authorization(String login, String password) {
+    public static String authorization(String login, String password, View view) {
         OkHttpClient client = new OkHttpClient();
 
         JSONObject parameters = new JSONObject();
@@ -183,9 +189,33 @@ public class RestApi {
                 .post(RequestBody.create(String.valueOf(parameters), JSON))
                 .build();
         String responseStr = null;
+
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
+                JSONObject Jobject = new JSONObject(response.body().string());
+                Snackbar.make(view, Jobject.get("detail").toString().replace("System message: ",""), Snackbar.LENGTH_SHORT).show();
                 throw new IOException("Запрос к серверу не был успешен: " +
+                        response.code() + " " + response.message());
+            }
+            responseStr = response.body().string();
+
+        } catch (IOException | JSONException e) {
+            System.out.println("Ошибка подключения: " + e);
+        }
+        return responseStr;
+    }
+
+    public static String getResult(String id, String apiKey) {
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(String.format(getResultUrl,id))
+                .addHeader("X-API-Key", apiKey)
+                .build();
+        String responseStr = null;
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Запрос к серверу не был успешен: " + String.format(getResultUrl,id) + " " + response.body().string() + " " +
                         response.code() + " " + response.message());
             }
             responseStr = response.body().string();
@@ -193,6 +223,41 @@ public class RestApi {
             System.out.println("Ошибка подключения: " + e);
         }
 
+        Log.i("Result Api", responseStr);
+
+        return responseStr;
+    }
+
+    public static String updateAutoInfo(String apiKey, String mark, String model, String year) {
+        OkHttpClient client = new OkHttpClient();
+
+        JSONObject parameters = new JSONObject();
+
+        try {
+            parameters.put("mark", mark);
+            parameters.put("model", model);
+            parameters.put("year", year);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        Request request = new Request.Builder()
+                .url(createAppIdUrl)
+                .post(RequestBody.create("", JSON))
+                .addHeader("X-API-Key", apiKey)
+                .build();
+        String responseStr = null;
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Запрос к серверу не был успешен: " + createAppIdUrl + " " + response.body().string() + " " +
+                        response.code() + " " + response.message());
+            }
+            responseStr = response.body().string();
+        } catch (IOException e) {
+            System.out.println("Ошибка подключения: " + e);
+        }
+
+        Log.i("PATCH Request:" , responseStr);
         return responseStr;
     }
 }
