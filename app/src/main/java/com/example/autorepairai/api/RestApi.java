@@ -41,6 +41,7 @@ public class RestApi {
     private static final String sendFileUrl = domain + "detection/%s/send";
     private static final String getStatusUrl = domain + "detection/%s/status";
     private static final String getResultUrl = domain + "detection/%s/result";
+    private static final String updateAutoInfo = domain + "detection/%s/auto_info";
     private static final String auth = domain + "account/auth";
     private static final String reg = domain + "account/register";
 
@@ -228,7 +229,7 @@ public class RestApi {
         return responseStr;
     }
 
-    public static String updateAutoInfo(String apiKey, String mark, String model, String year) {
+    public static String updateAutoInfo(String apiKey, String mark, String model, String year, String id) {
         OkHttpClient client = new OkHttpClient();
 
         JSONObject parameters = new JSONObject();
@@ -242,8 +243,8 @@ public class RestApi {
         }
 
         Request request = new Request.Builder()
-                .url(createAppIdUrl)
-                .post(RequestBody.create("", JSON))
+                .url(String.format(updateAutoInfo,id))
+                .patch(RequestBody.create(String.valueOf(parameters), JSON))
                 .addHeader("X-API-Key", apiKey)
                 .build();
         String responseStr = null;
@@ -259,5 +260,29 @@ public class RestApi {
 
         Log.i("PATCH Request:" , responseStr);
         return responseStr;
+    }
+
+    public static String getResultTest(String apiKey, String id){
+        String result = "{\n" +
+                "  \"mark\": \"Lada\",\n" +
+                "  \"model\": \"Granta\",\n" +
+                "  \"year\": \"2014\",\n" +
+                "  \"isCar\": true,\n" +
+                "  \"boxes\": \"{\\\"boxes\\\": [[95, 137, 550, 107], [58, 312, 621, 123]], \\\"confidences\\\": [0.003622930671554059, 2.943292543022835e-05], \\\"classes\\\": [\\\"damaged hood\\\", \\\"damaged bumper\\\"]}\",\n" +
+                "  \"prices\": \"[[{\\\"Капот\\\": \\\"12090.75\\\"}], [{\\\"Бампер\\\": \\\"35744.10\\\"}]]\"\n" +
+                "}";
+        return result;
+    }
+
+    public static String getResultFor4Step(){
+        String result = "{\n" +
+                "  \"mark\": \"Lada\",\n" +
+                "  \"model\": \"Granta\",\n" +
+                "  \"year\": \"2014\",\n" +
+                "  \"isCar\": true,\n" +
+                "  \"boxes\": \"{\\\"boxes\\\": [[95, 137, 550, 107], [58, 312, 621, 123]], \\\"confidences\\\": [0.003622930671554059, 2.943292543022835e-05], \\\"classes\\\": [\\\"damaged hood\\\", \\\"damaged bumper\\\"]}\",\n" +
+                "  \"prices\": \"[[{\\\"Капот\\\": \\\"12090.75\\\"}], [{\\\"Бампер\\\": \\\"35744.10\\\"}]]\"\n" +
+                "}";
+        return result;
     }
 }
