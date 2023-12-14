@@ -148,7 +148,7 @@
         android:layout_marginBottom="24dp"
         android:backgroundTint="#3156E8"
         android:text="Подтвердить"
-        android:onClick="showThirdStep"
+        android:onClick="updateInfoAuto"
         android:textAllCaps="false"
         app:cornerRadius="50dip"
         app:layout_constraintBottom_toBottomOf="parent"
