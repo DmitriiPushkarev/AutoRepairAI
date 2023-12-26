@@ -9,29 +9,15 @@
         android:id="@+id/editTextTextReleaseYear"
         android:layout_width="350dp"
         android:layout_height="50dp"
+        android:background="@drawable/rounded_edittext_backround_for_steps"
         android:ems="10"
         android:inputType="textPersonName"
-        android:background="@drawable/rounded_edittext_backround_for_steps"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.491"
+        app:layout_constraintHorizontal_bias="0.524"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTextCarModel"
-        app:layout_constraintVertical_bias="0.188" />
-
-    <EditText
-        android:id="@+id/editTextTextCarModel"
-        android:layout_width="350dp"
-        android:layout_height="50dp"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:background="@drawable/rounded_edittext_backround_for_steps"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.508"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTextCarBrand"
-        app:layout_constraintVertical_bias="0.12" />
+        app:layout_constraintTop_toBottomOf="@+id/spinnerModel"
+        app:layout_constraintVertical_bias="0.142" />
 
     <EditText
         android:id="@+id/editTextTextCarBrand"
@@ -39,7 +25,9 @@
         android:layout_height="50dp"
         android:background="@drawable/rounded_edittext_backround_for_steps"
         android:ems="10"
-        android:inputType="textPersonName"
+        android:inputType="none"
+        android:focusable="false"
+        android:text="Lada"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.491"
@@ -119,14 +107,13 @@
         android:id="@+id/carModel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Модель"
+        android:layout_marginTop="4dp"
+        android:text="Модель (выбор из списка)"
         android:textSize="16sp"
-        app:layout_constraintBottom_toTopOf="@+id/editTextTextCarModel"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.085"
+        app:layout_constraintHorizontal_bias="0.146"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTextCarBrand"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintTop_toBottomOf="@+id/editTextTextCarBrand" />
 
     <TextView
         android:id="@+id/releaseYear"
@@ -136,10 +123,8 @@
         android:textSize="16sp"
         app:layout_constraintBottom_toTopOf="@+id/editTextTextReleaseYear"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.094"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTextCarModel"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintHorizontal_bias="0.1"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/buttonForSend"
@@ -170,5 +155,19 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.023"
         app:srcCompat="@drawable/backbutton" />
+
+    <Spinner
+        android:id="@+id/spinnerModel"
+        android:layout_width="350dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="28dp"
+        android:background="@drawable/rounded_edittext_backround_for_steps"
+        android:ems="10"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.491"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextTextCarBrand"
+        app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,7 +4,9 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageView;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -15,6 +17,10 @@ public class StateAdapter  extends RecyclerView.Adapter<StateAdapter.ViewHolder>
 
     private final LayoutInflater inflater;
     private final List<String> strList;
+
+    public List<String> getStrList() {
+        return strList;
+    }
 
     public StateAdapter(Context context, List<String> strList) {
         this.strList = strList;
@@ -39,10 +45,10 @@ public class StateAdapter  extends RecyclerView.Adapter<StateAdapter.ViewHolder>
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        final TextView tvDamage;
+        final CheckBox tvDamage;
         ViewHolder(View view){
             super(view);
-            tvDamage = view.findViewById(R.id.tvDamage);
+            tvDamage = view.findViewById(R.id.checkBoxStep3);
         }
     }
 }

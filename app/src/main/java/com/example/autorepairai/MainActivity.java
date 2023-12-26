@@ -1,17 +1,25 @@
 package com.example.autorepairai;
 
+import android.content.ClipData;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.android.volley.RequestQueue;
@@ -25,6 +33,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -34,6 +43,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.autorepairai.databinding.ActivityMainBinding;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -65,9 +75,37 @@ public class MainActivity extends AppCompatActivity {
 
     static final String SAVE_USERID = "save_userid";
 
+    static List<String> checkBoxes = new ArrayList<>();
+
+    static final String[] models = {"Granta", "Largus",
+            "Priora",
+            "Kalina",
+            "LADA 4x4",
+            "ВАЗ-21213-214i (NIVA)",
+            "ВАЗ-21213 (NIVA)",
+            "ВАЗ-2131 (NIVA)",
+            "ВАЗ-2121 (NIVA)",
+            "ВАЗ-2120 (Надежда)",
+            "Vesta",
+            "ВАЗ-1111 \"ОКА\"",
+            "Niva",
+            "2123",
+            "GRANTA",
+            "VIS",
+            "21214",
+            "21310",
+            "21314",
+            "Urban",
+            "Bronto",
+            "XRAY",
+            "ВАЗ-2170",
+            "ВАЗ-1118",
+            "ВАЗ-1111 (ОКА)"};
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
         mRequestQueue = Volley.newRequestQueue(this);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
@@ -130,32 +168,27 @@ public class MainActivity extends AppCompatActivity {
                     i++;
                 }
 
-                //TODO change 3 to 2
-                //TODO change 3 to 2
-                //TODO change 3 to 2
-                //TODO change 3 to 2
-                //TODO change 3 to 2
-                //TODO change 3 to 2
-                //TODO change 3 to 2
-                //TODO change 3 to 2
-                //TODO change 3 to 2
-                //TODO change 3 to 2
-                //TODO change 3 to 2
-                //TODO change 3 to 2
-                //TODO change 3 to 2
-                //TODO change 3 to 2
-                //TODO change 3 to 2
-                if (responseString.contains("3")) {
+                if (responseString.contains("2")) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             notification.setText("Внимание, выберите только одно фото");
                             setContentView(R.layout.fragment_step2);
+
+                            TextView carBrand = findViewById(R.id.editTextTextCarBrand);
+
+                            Spinner spinner = findViewById(R.id.spinnerModel);
+                            // Создаем адаптер ArrayAdapter с помощью массива строк и стандартной разметки элемета spinner
+                            ArrayAdapter<String> adapter = new ArrayAdapter(getApplicationContext(), android.R.layout.simple_spinner_item, models);
+                            // Определяем разметку для использования при выборе элемента
+                            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                            // Применяем адаптер к элементу spinner
+                            spinner.setAdapter(adapter);
                         }
                     });
                 }
 
-                if (responseString.contains("2")) {
+                if (responseString.contains("3")) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -177,26 +210,20 @@ public class MainActivity extends AppCompatActivity {
         thread.start();
     }
 
-    public void onGetReportClick(View view) {
-        //Айди всеравно остается в модели, была теория, что при переключении меню объект обнуляется
-        dashboardViewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
-        new Thread(new Runnable() {
-            @Override
-            @WorkerThread
-            public void run() {
-//                TextView tv1 = (TextView) findViewById(R.id.textView6);
-//                String id = dashboardViewModel.getCurrentId();
-//                RestApi.getResult(id, tv1);
-            }
-        }).start();
-    }
-
     public void showRegistrationForm(View view) {
         setContentView(R.layout.fragment_registration);
     }
 
     public void showSecondStep(View view) {
         setContentView(R.layout.fragment_step2);
+
+        Spinner spinner = findViewById(R.id.spinnerModel);
+        // Создаем адаптер ArrayAdapter с помощью массива строк и стандартной разметки элемета spinner
+        ArrayAdapter<String> adapter = new ArrayAdapter(getApplicationContext(), android.R.layout.simple_spinner_item, models);
+        // Определяем разметку для использования при выборе элемента
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Применяем адаптер к элементу spinner
+        spinner.setAdapter(adapter);
     }
 
     public void closeFragment(View view) {
@@ -249,11 +276,14 @@ public class MainActivity extends AppCompatActivity {
                 String strEmail = tvEmail.getText().toString();
                 String strPassword = tvPassword.getText().toString();
                 String apiKey = RestApi.registration(strEmail, strPassword, view);
-                try {
-                    JSONObject jsonObject = new JSONObject(apiKey);
-                    ed.putString(SAVE_USERID, jsonObject.getString("userGuid"));
-                } catch (JSONException e) {
-                    e.printStackTrace();
+
+                if (apiKey != null) {
+                    try {
+                        JSONObject jsonObject = new JSONObject(apiKey);
+                        ed.putString(SAVE_USERID, jsonObject.getString("userGuid"));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 ed.apply();
@@ -285,11 +315,14 @@ public class MainActivity extends AppCompatActivity {
                 String strEmail = tvEmail.getText().toString();
                 String strPassword = tvPassword.getText().toString();
                 String apiKey = RestApi.authorization(strEmail, strPassword, view);
-                try {
-                    JSONObject jsonObject = new JSONObject(apiKey);
-                    ed.putString(SAVE_USERID, jsonObject.getString("userGuid"));
-                } catch (JSONException e) {
-                    e.printStackTrace();
+
+                if (apiKey != null) {
+                    try {
+                        JSONObject jsonObject = new JSONObject(apiKey);
+                        ed.putString(SAVE_USERID, jsonObject.getString("userGuid"));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 ed.apply();
@@ -313,12 +346,14 @@ public class MainActivity extends AppCompatActivity {
             @WorkerThread
             public void run() {
                 EditText mark = (EditText) findViewById(R.id.editTextTextCarBrand);
-                EditText model = (EditText) findViewById(R.id.editTextTextCarModel);
+                Spinner model = (Spinner) findViewById(R.id.spinnerModel);
                 EditText year = (EditText) findViewById(R.id.editTextTextReleaseYear);
 
                 String strMark = mark.getText().toString();
-                String strModel = model.getText().toString();
+                String strModel = model.getSelectedItem().toString();
                 String strYear = year.getText().toString();
+
+                Log.i("UpdateInfo step 2", "Mark: " + strMark + " Model: " + strModel + " Year: " + strYear);
 
                 String response = null;
                 try {
@@ -330,6 +365,9 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
 
+                String apiKey = getSharedPreferences("setting", MODE_PRIVATE).getString(SAVE_USERID, "");
+                String response1 = RestApi.getResult(dashboardViewModel.getCurrentId(), apiKey);
+
                 if (response != null) {
                     runOnUiThread(new Runnable() {
                         @Override
@@ -337,8 +375,6 @@ public class MainActivity extends AppCompatActivity {
                             setContentView(R.layout.fragment_step3);
 
                             try {
-                                String apiKey = getSharedPreferences("setting", MODE_PRIVATE).getString(SAVE_USERID, "");
-                                String response1 = RestApi.getResultTest(apiKey, dashboardViewModel.getCurrentId());
                                 JSONObject jsonObject = new JSONObject(response1);
                                 JSONObject jsonObjectBoxes = new JSONObject(jsonObject.getString("boxes"));
                                 JSONArray classes = jsonObjectBoxes.getJSONArray("classes");
@@ -375,33 +411,119 @@ public class MainActivity extends AppCompatActivity {
         thread.start();
     }
 
-    public void getResultTest(View view) {
-        setContentView(R.layout.fragment_step4);
+    public void drawBoxes(View view) {
+        ImageView imageViewForDownload = findViewById(R.id.pickImage);
+        BitmapDrawable bitmapDrawable = ((BitmapDrawable) imageViewForDownload.getDrawable());
+        Bitmap bitmap = bitmapDrawable.getBitmap();
+        Bitmap tempBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        Canvas canvas = new Canvas(tempBitmap);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(Color.GREEN);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(15);
+        canvas.drawRect(95, 137, 550, 107, paint);
+        imageViewForDownload.setImageBitmap(tempBitmap);
+    }
 
-        try {
-            String response = RestApi.getResultFor4Step();
-            JSONObject jsonObject = new JSONObject(response);
-            List<String> list  = Arrays.asList(jsonObject.getString("prices").split(","));
-            List<String> clearList  = new ArrayList<>();
-            for (int i = 0; i<list.size(); i++){
-                clearList.add(list.get(i).replace("[","").replace("]","").replace("{","").replace("}","").replace(" ", ""));
+    public void getAdvice(View view) {
+        Snackbar.make(view, "Вспомните!", Snackbar.LENGTH_SHORT).show();
+    }
+    public void showThirdStep(View view) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            @WorkerThread
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    String apiKey = getSharedPreferences("setting", MODE_PRIVATE).getString(SAVE_USERID, "");
+                    String response1 = RestApi.getResult(dashboardViewModel.getCurrentId(), apiKey);
+                    @Override
+                    public void run() {
+                        setContentView(R.layout.fragment_step3);
+
+                        try {
+                            JSONObject jsonObject = new JSONObject(response1);
+                            JSONObject jsonObjectBoxes = new JSONObject(jsonObject.getString("boxes"));
+                            JSONArray classes = jsonObjectBoxes.getJSONArray("classes");
+                            List<String> classesList = new ArrayList<>();
+                            for (int i = 0; i < classes.length(); i++) {
+                                classesList.add(classes.getString(i));
+                            }
+
+                            String boxes = jsonObjectBoxes.getString("boxes");
+                            String prices = jsonObject.getString("prices");
+                            Log.i("Result request, boxes:", boxes);
+                            Log.i("Result request, classes:", classesList.toString());
+                            Log.i("Result request, prices:", prices);
+
+                            LayoutInflater inflater = LayoutInflater.from(view.getContext());
+                            View fragment_step3 = inflater.inflate(R.layout.fragment_step3, null, false);
+
+                            RecyclerView recyclerView = findViewById(R.id.recyclerViewStep3);
+                            recyclerView.setHasFixedSize(true);
+                            // создаем адаптер
+                            LinearLayoutManager llm = new LinearLayoutManager(fragment_step3.getContext());
+                            llm.setOrientation(LinearLayoutManager.VERTICAL);
+                            recyclerView.setLayoutManager(llm);
+                            // устанавливаем для списка адаптер
+                            recyclerView.setAdapter(new StateAdapter(fragment_step3.getContext(), new ArrayList<>(classesList)));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
             }
 
 
-            LayoutInflater inflater = LayoutInflater.from(view.getContext());
-            View fragment_step4 = inflater.inflate(R.layout.fragment_step4, null, false);
+        });
+        thread.start();
+    }
 
-            RecyclerView recyclerView = findViewById(R.id.recyclerViewStep4);
-            recyclerView.setHasFixedSize(true);
-            // создаем адаптер
-            LinearLayoutManager llm = new LinearLayoutManager(fragment_step4.getContext());
-            llm.setOrientation(LinearLayoutManager.VERTICAL);
-            recyclerView.setLayoutManager(llm);
-            // устанавливаем для списка адаптер
-            recyclerView.setAdapter(new StateAdapter(fragment_step4.getContext(), new ArrayList<>(clearList)));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+    public void getResultStep4(View view) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            @WorkerThread
+            public void run() {
+                String apiKey = getSharedPreferences("setting", MODE_PRIVATE).getString(SAVE_USERID, "");
+                String response = RestApi.getResult(dashboardViewModel.getCurrentId(), apiKey);
+
+                RecyclerView recyclerView = findViewById(R.id.recyclerViewStep3);
+                StateAdapter adapter = (StateAdapter) recyclerView.getAdapter();
+                List<String> damages = adapter.getStrList();
+
+                RestApi.updateAutoDamage(apiKey, dashboardViewModel.getCurrentId(), damages);
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        setContentView(R.layout.fragment_step4);
+
+                        try {
+                            JSONObject jsonObject = new JSONObject(response);
+                            List<String> list = Arrays.asList(jsonObject.getString("prices").split(","));
+                            List<String> clearList = new ArrayList<>();
+                            for (int i = 0; i < list.size(); i++) {
+                                clearList.add(list.get(i).replace("[", "").replace("]", "").replace("{", "").replace("}", "").replace(" ", ""));
+                            }
+
+                            LayoutInflater inflater = LayoutInflater.from(view.getContext());
+                            View fragment_step4 = inflater.inflate(R.layout.fragment_step4, null, false);
+
+                            RecyclerView recyclerView = findViewById(R.id.recyclerViewStep4);
+                            recyclerView.setHasFixedSize(true);
+                            // создаем адаптер
+                            LinearLayoutManager llm = new LinearLayoutManager(fragment_step4.getContext());
+                            llm.setOrientation(LinearLayoutManager.VERTICAL);
+                            recyclerView.setLayoutManager(llm);
+                            // устанавливаем для списка адаптер
+                            recyclerView.setAdapter(new StateAdapterStep4(fragment_step4.getContext(), new ArrayList<>(clearList)));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
+        });
+        thread.start();
     }
 
     private boolean isNewUser() {

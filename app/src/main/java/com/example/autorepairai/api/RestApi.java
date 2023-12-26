@@ -12,12 +12,14 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.snackbar.Snackbar;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Authenticator;
@@ -34,14 +36,15 @@ public class RestApi {
     //Логин - dima@mail.ru
     //Пароль - qwerty123@Q
     public static final MediaType JSON = MediaType.get("application/json");
-    //private static final String domain = "https://test.npp-arts.ru/api/v1/public/";
-    private static final String domain = "http://10.0.2.2:8001/api/v1/public/";
+    private static final String domain = "https://test.npp-arts.ru/api/v1/public/";
+    //private static final String domain = "http://10.0.2.2:8001/api/v1/public/";
     private static final String createAppIdUrl = domain + "detection/application/create";
     private static final String uploadFileUrl = domain + "detection/%s/file";
     private static final String sendFileUrl = domain + "detection/%s/send";
     private static final String getStatusUrl = domain + "detection/%s/status";
     private static final String getResultUrl = domain + "detection/%s/result";
     private static final String updateAutoInfo = domain + "detection/%s/auto_info";
+    private static final String updateAutoDamage = domain + "detection/%s/damage_info";
     private static final String auth = domain + "account/auth";
     private static final String reg = domain + "account/register";
 
@@ -194,7 +197,7 @@ public class RestApi {
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 JSONObject Jobject = new JSONObject(response.body().string());
-                Snackbar.make(view, Jobject.get("detail").toString().replace("System message: ",""), Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(view, Jobject.get("detail").toString().replace("System message",""), Snackbar.LENGTH_SHORT).show();
                 throw new IOException("Запрос к серверу не был успешен: " +
                         response.code() + " " + response.message());
             }
@@ -224,7 +227,7 @@ public class RestApi {
             System.out.println("Ошибка подключения: " + e);
         }
 
-        Log.i("Result Api", responseStr);
+        Log.i("getResult", responseStr);
 
         return responseStr;
     }
@@ -262,27 +265,38 @@ public class RestApi {
         return responseStr;
     }
 
-    public static String getResultTest(String apiKey, String id){
-        String result = "{\n" +
-                "  \"mark\": \"Lada\",\n" +
-                "  \"model\": \"Granta\",\n" +
-                "  \"year\": \"2014\",\n" +
-                "  \"isCar\": true,\n" +
-                "  \"boxes\": \"{\\\"boxes\\\": [[95, 137, 550, 107], [58, 312, 621, 123]], \\\"confidences\\\": [0.003622930671554059, 2.943292543022835e-05], \\\"classes\\\": [\\\"damaged hood\\\", \\\"damaged bumper\\\"]}\",\n" +
-                "  \"prices\": \"[[{\\\"Капот\\\": \\\"12090.75\\\"}], [{\\\"Бампер\\\": \\\"35744.10\\\"}]]\"\n" +
-                "}";
-        return result;
-    }
+    public static String updateAutoDamage(String apiKey, String id, List<String> damages) {
+        OkHttpClient client = new OkHttpClient();
 
-    public static String getResultFor4Step(){
-        String result = "{\n" +
-                "  \"mark\": \"Lada\",\n" +
-                "  \"model\": \"Granta\",\n" +
-                "  \"year\": \"2014\",\n" +
-                "  \"isCar\": true,\n" +
-                "  \"boxes\": \"{\\\"boxes\\\": [[95, 137, 550, 107], [58, 312, 621, 123]], \\\"confidences\\\": [0.003622930671554059, 2.943292543022835e-05], \\\"classes\\\": [\\\"damaged hood\\\", \\\"damaged bumper\\\"]}\",\n" +
-                "  \"prices\": \"[[{\\\"Капот\\\": \\\"12090.75\\\"}], [{\\\"Бампер\\\": \\\"35744.10\\\"}]]\"\n" +
-                "}";
-        return result;
+        JSONObject parameters = new JSONObject();
+
+        JSONArray array = new JSONArray(damages);
+
+        try {
+            parameters.put("damageList", array);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        Log.i("updateAutoDamage", parameters.toString());
+
+        Request request = new Request.Builder()
+                .url(String.format(updateAutoDamage,id))
+                .patch(RequestBody.create(String.valueOf(parameters), JSON))
+                .addHeader("X-API-Key", apiKey)
+                .build();
+        String responseStr = null;
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Запрос к серверу не был успешен: " + createAppIdUrl + " " + response.body().string() + " " +
+                        response.code() + " " + response.message());
+            }
+            responseStr = response.body().string();
+        } catch (IOException e) {
+            System.out.println("Ошибка подключения: " + e);
+        }
+
+        Log.i("PATCH Request:" , responseStr);
+        return responseStr;
     }
 }

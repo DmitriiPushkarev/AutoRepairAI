@@ -76,6 +76,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.022" />
 
+    <!--        android:onClick="onSendPictureClick"-->
     <Button
         android:id="@+id/buttonForSend"
         android:layout_width="215dp"
