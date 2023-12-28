@@ -7,7 +7,9 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -51,7 +53,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -100,7 +104,33 @@ public class MainActivity extends AppCompatActivity {
             "XRAY",
             "ВАЗ-2170",
             "ВАЗ-1118",
-            "ВАЗ-1111 (ОКА)"};
+            "ВАЗ-1111 (ОКА)",
+            "LADA Granta 2191",
+            "Chevrolet Niva 1.7",
+            "LADA XRAY",
+            "LADA Vesta",
+            "LADA Largus 4601",
+            "LADA Granta 2190",
+            "LADA Priora FL (ВАЗ-2170)",
+            "LADA Priora Coupe",
+            "LADA Kalina 2194",
+            "LADA Kalina 1119",
+            "ВАЗ-2123",
+            "LADA 4x4","Chevrolet Niva",
+            "LADA 21214",
+            "LADA Granta FL",
+            "LADA Vesta SW",
+            "LADA Largus",
+            "LADA Granta Cross",
+            "LADA Vesta Cross",
+            "LADA XRAY Cross",
+            "LADA Vesta Sport",
+            "LADA Granta Sport",
+            "LADA Kalina Sport",
+            "LADA Niva Travel",
+            "ВАЗ-2115",
+            "ВАЗ-2114",
+            "ВАЗ-2113","ВАЗ-2112","ВАЗ-2111","ВАЗ-2110","ВАЗ-2109","ВАЗ-2109","ВАЗ-2108","ВАЗ-2107","ВАЗ-1111"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -168,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
                     i++;
                 }
 
-                if (responseString.contains("2")) {
+                if (responseString.contains("2") && responseString!=null) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -188,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
                     });
                 }
 
-                if (responseString.contains("3")) {
+                if (responseString.contains("3") && responseString!=null) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -392,14 +422,39 @@ public class MainActivity extends AppCompatActivity {
                                 LayoutInflater inflater = LayoutInflater.from(view.getContext());
                                 View fragment_step3 = inflater.inflate(R.layout.fragment_step3, null, false);
 
-                                RecyclerView recyclerView = findViewById(R.id.recyclerViewStep3);
-                                recyclerView.setHasFixedSize(true);
-                                // создаем адаптер
-                                LinearLayoutManager llm = new LinearLayoutManager(fragment_step3.getContext());
-                                llm.setOrientation(LinearLayoutManager.VERTICAL);
-                                recyclerView.setLayoutManager(llm);
-                                // устанавливаем для списка адаптер
-                                recyclerView.setAdapter(new StateAdapter(fragment_step3.getContext(), new ArrayList<>(classesList)));
+                                CheckBox checkBox = findViewById(R.id.checkBox);
+                                CheckBox checkBox2 = findViewById(R.id.checkBox2);
+                                CheckBox checkBox3 = findViewById(R.id.checkBox3);
+                                CheckBox checkBox4 = findViewById(R.id.checkBox4);
+                                CheckBox checkBox5 = findViewById(R.id.checkBox5);
+                                CheckBox checkBox6 = findViewById(R.id.checkBox6);
+                                CheckBox checkBox7 = findViewById(R.id.checkBox7);
+
+                                List<CheckBox> checkBoxes = new ArrayList<>();
+                                checkBoxes.add(checkBox);
+                                checkBoxes.add(checkBox2);
+                                checkBoxes.add(checkBox3);
+                                checkBoxes.add(checkBox4);
+                                checkBoxes.add(checkBox5);
+                                checkBoxes.add(checkBox6);
+                                checkBoxes.add(checkBox7);
+
+                                for (int i = 0; i < checkBoxes.size(); i++) {
+                                    for (int j = 0; j < classesList.size(); j++) {
+                                        if (Objects.equals(classesList.get(j), checkBoxes.get(i).getText().toString())) {
+                                            checkBoxes.get(i).setChecked(true);
+                                        }
+                                    }
+                                }
+
+//                                RecyclerView recyclerView = findViewById(R.id.recyclerViewStep3);
+//                                recyclerView.setHasFixedSize(true);
+//                                // создаем адаптер
+//                                LinearLayoutManager llm = new LinearLayoutManager(fragment_step3.getContext());
+//                                llm.setOrientation(LinearLayoutManager.VERTICAL);
+//                                recyclerView.setLayoutManager(llm);
+//                                // устанавливаем для списка адаптер
+//                                recyclerView.setAdapter(new StateAdapter(fragment_step3.getContext(), new ArrayList<>(classesList)));
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
@@ -428,6 +483,7 @@ public class MainActivity extends AppCompatActivity {
     public void getAdvice(View view) {
         Snackbar.make(view, "Вспомните!", Snackbar.LENGTH_SHORT).show();
     }
+
     public void showThirdStep(View view) {
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -436,6 +492,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     String apiKey = getSharedPreferences("setting", MODE_PRIVATE).getString(SAVE_USERID, "");
                     String response1 = RestApi.getResult(dashboardViewModel.getCurrentId(), apiKey);
+
                     @Override
                     public void run() {
                         setContentView(R.layout.fragment_step3);
@@ -458,14 +515,39 @@ public class MainActivity extends AppCompatActivity {
                             LayoutInflater inflater = LayoutInflater.from(view.getContext());
                             View fragment_step3 = inflater.inflate(R.layout.fragment_step3, null, false);
 
-                            RecyclerView recyclerView = findViewById(R.id.recyclerViewStep3);
-                            recyclerView.setHasFixedSize(true);
-                            // создаем адаптер
-                            LinearLayoutManager llm = new LinearLayoutManager(fragment_step3.getContext());
-                            llm.setOrientation(LinearLayoutManager.VERTICAL);
-                            recyclerView.setLayoutManager(llm);
-                            // устанавливаем для списка адаптер
-                            recyclerView.setAdapter(new StateAdapter(fragment_step3.getContext(), new ArrayList<>(classesList)));
+                            CheckBox checkBox = findViewById(R.id.checkBox);
+                            CheckBox checkBox2 = findViewById(R.id.checkBox2);
+                            CheckBox checkBox3 = findViewById(R.id.checkBox3);
+                            CheckBox checkBox4 = findViewById(R.id.checkBox4);
+                            CheckBox checkBox5 = findViewById(R.id.checkBox5);
+                            CheckBox checkBox6 = findViewById(R.id.checkBox6);
+                            CheckBox checkBox7 = findViewById(R.id.checkBox7);
+
+                            List<CheckBox> checkBoxes = new ArrayList<>();
+                            checkBoxes.add(checkBox);
+                            checkBoxes.add(checkBox2);
+                            checkBoxes.add(checkBox3);
+                            checkBoxes.add(checkBox4);
+                            checkBoxes.add(checkBox5);
+                            checkBoxes.add(checkBox6);
+                            checkBoxes.add(checkBox7);
+
+                            for (int i = 0; i < checkBoxes.size(); i++) {
+                                for (int j = 0; j < classesList.size(); j++) {
+                                    if (Objects.equals(classesList.get(j), checkBoxes.get(i).getText().toString())) {
+                                        checkBoxes.get(i).setChecked(true);
+                                    }
+                                }
+                            }
+
+//                            RecyclerView recyclerView = findViewById(R.id.recyclerViewStep3);
+//                            recyclerView.setHasFixedSize(true);
+//                            // создаем адаптер
+//                            LinearLayoutManager llm = new LinearLayoutManager(fragment_step3.getContext());
+//                            llm.setOrientation(LinearLayoutManager.VERTICAL);
+//                            recyclerView.setLayoutManager(llm);
+//                            // устанавливаем для списка адаптер
+//                            recyclerView.setAdapter(new StateAdapter(fragment_step3.getContext(), new ArrayList<>(classesList)));
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -486,41 +568,118 @@ public class MainActivity extends AppCompatActivity {
                 String apiKey = getSharedPreferences("setting", MODE_PRIVATE).getString(SAVE_USERID, "");
                 String response = RestApi.getResult(dashboardViewModel.getCurrentId(), apiKey);
 
-                RecyclerView recyclerView = findViewById(R.id.recyclerViewStep3);
-                StateAdapter adapter = (StateAdapter) recyclerView.getAdapter();
-                List<String> damages = adapter.getStrList();
+                CheckBox checkBox = findViewById(R.id.checkBox);
+                CheckBox checkBox2 = findViewById(R.id.checkBox2);
+                CheckBox checkBox3 = findViewById(R.id.checkBox3);
+                CheckBox checkBox4 = findViewById(R.id.checkBox4);
+                CheckBox checkBox5 = findViewById(R.id.checkBox5);
+                CheckBox checkBox6 = findViewById(R.id.checkBox6);
+                CheckBox checkBox7 = findViewById(R.id.checkBox7);
 
-                RestApi.updateAutoDamage(apiKey, dashboardViewModel.getCurrentId(), damages);
+                List<CheckBox> checkBoxes = new ArrayList<>();
+                checkBoxes.add(checkBox);
+                checkBoxes.add(checkBox2);
+                checkBoxes.add(checkBox3);
+                checkBoxes.add(checkBox4);
+                checkBoxes.add(checkBox5);
+                checkBoxes.add(checkBox6);
+                checkBoxes.add(checkBox7);
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        setContentView(R.layout.fragment_step4);
+                List<String> damages = new ArrayList<>();
 
-                        try {
-                            JSONObject jsonObject = new JSONObject(response);
-                            List<String> list = Arrays.asList(jsonObject.getString("prices").split(","));
-                            List<String> clearList = new ArrayList<>();
-                            for (int i = 0; i < list.size(); i++) {
-                                clearList.add(list.get(i).replace("[", "").replace("]", "").replace("{", "").replace("}", "").replace(" ", ""));
-                            }
-
-                            LayoutInflater inflater = LayoutInflater.from(view.getContext());
-                            View fragment_step4 = inflater.inflate(R.layout.fragment_step4, null, false);
-
-                            RecyclerView recyclerView = findViewById(R.id.recyclerViewStep4);
-                            recyclerView.setHasFixedSize(true);
-                            // создаем адаптер
-                            LinearLayoutManager llm = new LinearLayoutManager(fragment_step4.getContext());
-                            llm.setOrientation(LinearLayoutManager.VERTICAL);
-                            recyclerView.setLayoutManager(llm);
-                            // устанавливаем для списка адаптер
-                            recyclerView.setAdapter(new StateAdapterStep4(fragment_step4.getContext(), new ArrayList<>(clearList)));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                for (int i = 0; i < checkBoxes.size(); i++) {
+                    if (checkBoxes.get(i).isChecked()) {
+                        damages.add(checkBoxes.get(i).getText().toString());
                     }
-                });
+                }
+
+                if (damages.size() != 0) {
+
+                    RestApi.updateAutoDamage(apiKey, dashboardViewModel.getCurrentId(), damages);
+
+                    runOnUiThread(new Runnable() {
+                                      @Override
+                                      public void run() {
+                                          TextView textView = findViewById(R.id.textView);
+                                          textView.setVisibility(View.VISIBLE);
+                                          Button button = findViewById(R.id.buttonForSend3);
+                                          button.setVisibility(View.INVISIBLE);
+                                      }
+                                  });
+
+                    RestApi.getPrices(dashboardViewModel.getCurrentId(),apiKey);
+                    response = RestApi.getResult(dashboardViewModel.getCurrentId(), apiKey);
+
+                    String finalResponse = response;
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            setContentView(R.layout.fragment_step4);
+
+                            try {
+                                JSONObject jsonObject = new JSONObject(finalResponse);
+                                List<String> list = Arrays.asList(jsonObject.getString("prices").split(","));
+                                List<String> clearList = new ArrayList<>();
+                                for (int i = 0; i < list.size(); i++) {
+                                    clearList.add(list.get(i).replace("[", "").replace("]", "").replace("{", "").replace("}", ""));
+                                }
+
+                                LayoutInflater inflater = LayoutInflater.from(view.getContext());
+                                View fragment_step4 = inflater.inflate(R.layout.fragment_step4, null, false);
+
+                                RecyclerView recyclerView = findViewById(R.id.recyclerViewStep4);
+                                recyclerView.setHasFixedSize(true);
+                                // создаем адаптер
+                                LinearLayoutManager llm = new LinearLayoutManager(fragment_step4.getContext());
+                                llm.setOrientation(LinearLayoutManager.VERTICAL);
+                                recyclerView.setLayoutManager(llm);
+                                // устанавливаем для списка адаптер
+                                recyclerView.setAdapter(new StateAdapterStep4(fragment_step4.getContext(), new ArrayList<>(clearList)));
+
+                                ImageView imageView = findViewById(R.id.imageView2);
+                                JSONObject jsonObjectBoxes = new JSONObject(jsonObject.getString("boxes"));
+                                String boxes = jsonObjectBoxes.getString("boxes");
+                                JSONArray classes = jsonObjectBoxes.getJSONArray("classes");
+                                List<String> classesList = new ArrayList<>();
+                                for (int i = 0; i < classes.length(); i++) {
+                                    classesList.add(classes.getString(i));
+                                }
+                                imageView.setImageDrawable(imageViewForDownload.getDrawable());
+                                imageViewForDownload.clearColorFilter();
+
+                                BitmapDrawable bitmapDrawable = ((BitmapDrawable) imageView.getDrawable());
+                                Bitmap bitmap = bitmapDrawable.getBitmap();
+                                Bitmap tempBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+                                Canvas canvas = new Canvas(tempBitmap);
+                                Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                                paint.setColor(Color.GREEN);
+                                paint.setStyle(Paint.Style.STROKE);
+                                paint.setStrokeWidth(10);
+
+                                Paint paint1 = new Paint(Paint.ANTI_ALIAS_FLAG);
+                                paint1.setColor(Color.RED);
+                                paint1.setTextSize(40);
+
+                                boxes = boxes.replace("[","").replace("]","").replace(" ","");
+                                String[] boxesArray = boxes.split(",");
+                                List<String> boxesList = Arrays.asList(boxesArray);
+                                Log.i("Boxes", boxesList.toString());
+
+
+                                for(int i = 0,j = 0; i < boxesList.size();i=i+4, j++){
+                                    Log.i("Boxes", Integer.parseInt(boxesList.get(i)) + " " + Integer.parseInt(boxesList.get(i+1)) + " " + Integer.parseInt(boxesList.get(i+2))+ " " + Integer.parseInt(boxesList.get(i+3)));
+                                    canvas.drawText(classesList.get(j), Integer.parseInt(boxesList.get(i)), Integer.parseInt(boxesList.get(i+1))-20, paint1);
+                                    canvas.drawRect(Integer.parseInt(boxesList.get(i)), Integer.parseInt(boxesList.get(i+1)), Integer.parseInt(boxesList.get(i+2)), Integer.parseInt(boxesList.get(i+3)), paint);
+                                }
+                                imageView.setImageBitmap(tempBitmap);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                } else {
+                    Snackbar.make(view, "Необходимо что-то выбрать!", Snackbar.LENGTH_SHORT).show();
+                }
             }
         });
         thread.start();

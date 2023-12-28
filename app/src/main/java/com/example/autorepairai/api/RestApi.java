@@ -18,7 +18,10 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -45,6 +48,8 @@ public class RestApi {
     private static final String getResultUrl = domain + "detection/%s/result";
     private static final String updateAutoInfo = domain + "detection/%s/auto_info";
     private static final String updateAutoDamage = domain + "detection/%s/damage_info";
+    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final String getPricesList = domain + "detection/%s/list_prices?report_date="+ LocalDate.now().format(formatter)+"&rf_subject=64";
     private static final String auth = domain + "account/auth";
     private static final String reg = domain + "account/register";
 
@@ -230,6 +235,25 @@ public class RestApi {
         Log.i("getResult", responseStr);
 
         return responseStr;
+    }
+
+    public static void getPrices(String id, String apiKey) {
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(String.format(getPricesList,id))
+                .addHeader("X-API-Key", apiKey)
+                .build();
+        String responseStr = null;
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Запрос к серверу не был успешен: " + String.format(getPricesList,id) + " " + response.body().string() + " " +
+                        response.code() + " " + response.message());
+            }
+            responseStr = response.body().string();
+        } catch (IOException e) {
+            System.out.println("Ошибка подключения: " + e + " " + String.format(getPricesList,id));
+        }
     }
 
     public static String updateAutoInfo(String apiKey, String mark, String model, String year, String id) {

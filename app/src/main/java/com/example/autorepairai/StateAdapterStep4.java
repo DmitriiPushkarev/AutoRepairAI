@@ -36,7 +36,17 @@ public class StateAdapterStep4 extends RecyclerView.Adapter<StateAdapterStep4.Vi
         if(!Objects.equals(str, "null")) {
             int index = str.indexOf(":");
             holder.info.setText(str.substring(0, index).replace("\"", ""));
-            holder.price.setText("~" + str.substring(index + 1).replace("\"", "") + " рублей");
+            float priceInt = Float.parseFloat(str.substring(index + 1).replace("\"", ""));
+            if(priceInt < 10){
+                priceInt = priceInt * 1000;
+            }
+            if(priceInt > 10 && priceInt < 100){
+                priceInt = priceInt * 100;
+            }
+            if(priceInt > 100 && priceInt < 1000){
+                priceInt = priceInt * 10;
+            }
+            holder.price.setText("~" + priceInt + " рублей");
         } else {
             holder.info.setText("Деталей не найдено");
             holder.price.setText("Попробуйте еще раз");
